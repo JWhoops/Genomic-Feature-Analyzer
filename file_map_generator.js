@@ -24,10 +24,9 @@ new Promise(function(resolve, reject) {
     files = result_files.filter(file_name => pattern.test(file_name));
     for (f of files) {
       const assembly_acces = "GCF_" + f.split("_")[1];
-      const url = base_url + assembly_acces + "/";
-      mamal_urls.push(url);
+      mamal_urls.push(assembly_acces);
     }
-    let requests = mamal_urls.map(url => axios.get(url));
+    let requests = mamal_urls.map(url => axios.get(base_url + url));
     return Promise.all(requests);
   })
   .then(responses => {
