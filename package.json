@@ -9,7 +9,9 @@
   "author": "Josiah Wu",
   "license": "ISC",
   "dependencies": {
+    "axios": "^0.19.0",
     "bionode-gff": "^2.0.0",
-    "chart.js": "^2.8.0"
+    "chart.js": "^2.8.0",
+    "cheerio": "^1.0.0-rc.3"
   }
 }
