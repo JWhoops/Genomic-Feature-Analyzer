@@ -1,3 +1,5 @@
-mamals
-node_modules
-*.DS_Store
+mamals/
+node_modules/
+mamals_test/
+.DS_Store
+
