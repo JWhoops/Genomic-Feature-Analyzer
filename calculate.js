@@ -1,27 +1,24 @@
 const gff = require("bionode-gff");
 const fs = require("fs");
 const path = require("path");
-var events = require("events");
 
 function calculate_file(file_name) {
   let gene,
     wrong_gene_counts = 0,
-    total_gene_length = 0,
-    total_gene_count = 0,
+    total_counted_gene_length = 0,
+    counted_genes = 0,
     first_to_last_exon_length_pieces = 0,
     total_coded_exon_length = 0;
 
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     gff
       .read(file_name)
       .on("data", onFeature)
       .on("end", () => {
         done_reading_file();
-        console.log("end" + events.listenerCount(gff, "end"));
-        console.log("data" + events.listenerCount(gff, "data"));
         resolve({
           file_name: file_name,
-          average_gene_length: total_gene_length / total_gene_count,
+          average_gene_length: total_counted_gene_length / counted_genes,
           average_exon_length:
             total_coded_exon_length / first_to_last_exon_length_pieces,
           total_exon: first_to_last_exon_length_pieces
@@ -40,6 +37,8 @@ function calculate_file(file_name) {
     if (feature.type === "gene") {
       if (gene) fetch_gene_info(gene);
       gene = feature;
+      gene.start = feature.start;
+      gene.end = feature.end;
       gene.exons = []; // push all exons to gene object
       gene.cdss = []; // push all CDS to gene object
     } else if (feature.type === "exon" && gene) {
@@ -63,17 +62,14 @@ function calculate_file(file_name) {
     // get the last coded_exon_length
     const coded_exon_length = get_coded_exon_length_for_gene(gene);
     const gene_length = gene.end - gene.start;
-    total_gene_count++;
-    total_gene_length += gene_length;
     if (coded_exon_length > 0 && coded_exon_length <= gene_length) {
+      counted_genes++;
+      total_counted_gene_length += gene_length;
       total_coded_exon_length += coded_exon_length;
       first_to_last_exon_length_pieces++;
     }
-    if (gene_length < coded_exon_length) {
-      wrong_gene_counts++;
-    }
+    if (gene_length < coded_exon_length) wrong_gene_counts++;
   }
-
   // calculate the coded exon length
   // first_exon_start first_DSA first_exon_end
   // last_exon_start last_DSA last_exon_end
@@ -88,14 +84,14 @@ function calculate_file(file_name) {
     for (let i = 0; i < g.exons.length; i++) {
       const firstExon = g.exons[i];
       if (firstCDS.start >= firstExon.start && firstCDS.end <= firstExon.end) {
-        start = firstExon.start;
+        end = firstExon.end;
         break;
       }
     }
     for (let i = 0; i < g.exons.length; i++) {
       const lastExon = g.exons[g.exons.length - 1 - i];
       if (lastCDS.start >= lastExon.start && lastCDS.end <= lastExon.end) {
-        end = lastExon.end;
+        start = lastExon.start;
         break;
       }
     }
@@ -104,52 +100,68 @@ function calculate_file(file_name) {
 
   function done_reading_file() {
     fetch_gene_info(gene); // this is for last gene in file;
-    // let scatter_data = JSON.stringify(datas);
-    // fs.writeFile("./scatter.json", scatter_data, err => {
-    //   if (err) console.log(err);
-    //   console.log("Done!!!!!");
-    // });
-    //   console.log("Total Gene Count = " + total_gene_count);
-    //   console.log("Total Gene Length = " + total_gene_length);
-    //   console.log(
-    //     "Average Gene Length = " + total_gene_length / total_gene_count
-    //   );
-    //   console.log(
-    //     "Total Encoded First to Last Exon Length = " + total_coded_exon_length
-    //   );
-    //   console.log(
-    //     "Total Encoded First to Last Exon Length Pieces = " +
-    //       first_to_last_exon_length_pieces
-    //   );
-    //   console.log(
-    //     "Average Length of First Coded Exon to Last Coded Exon = " +
-    //       total_coded_exon_length / first_to_last_exon_length_pieces
-    //   );
-    //   console.log("Illegal Gene Number = " + wrong_gene_counts);
+    console.log("Counted Genes = " + counted_genes);
+    console.log("Total Counted Gene Length = " + total_counted_gene_length);
+    console.log(
+      "Average Gene Length = " + total_counted_gene_length / counted_genes
+    );
+    console.log(
+      "Total Encoded First to Last Exon Length = " + total_coded_exon_length
+    );
+    console.log(
+      "Total Encoded First to Last Exon Length Pieces = " +
+        first_to_last_exon_length_pieces
+    );
+    console.log(
+      "Average Length of First Coded Exon to Last Coded Exon = " +
+        total_coded_exon_length / first_to_last_exon_length_pieces
+    );
+    console.log("Illegal Gene Number = " + wrong_gene_counts);
   }
 }
 
-async function cal() {
+async function calculate_all_files() {
+  let result_arr = [];
   const directoryPath = path.join(__dirname, "mamals");
-  let mamal_files = await new Promise((resolve, reject) => {
-    fs.readdir(directoryPath, function(err, files) {
-      if (err) return console.log("Unable to scan directory: " + err);
-      let result_files = [];
-      const pattern = /^GCF_[0-9]*.*/;
-      files.forEach(function(file) {
-        if (pattern.test(file)) result_files.push("./mamals/" + file);
-      });
-      resolve(result_files);
-    });
+  let files = fs.readdirSync(directoryPath);
+  let result_files = [];
+  const pattern = /^GCF_[0-9]*.*/;
+  files.forEach(function(f) {
+    if (pattern.test(f)) result_files.push("./mamals/" + f);
   });
-  for (let i = 0; i < mamal_files.length; i++) {
-    const f = mamal_files[i];
-    console.log("calculating " + f);
+
+  for (let i = 0, len = result_files.length; i < len; i++) {
+    const f = result_files[i];
+    console.log("calculating " + f + "(" + i + "/" + len + ")");
     await calculate_file(f, "")
       .then(res => {
-        console.log(res);
+        result_arr.push([
+          res.file_name,
+          res.average_gene_length,
+          res.average_exon_length
+        ]);
       })
       .catch(err => console.log(err));
   }
+  return result_arr;
 }
-cal();
+
+async function initializedFileMap() {
+  var contents = fs.readFileSync("files_map.json");
+  // Define to JSON type
+  var files_map = JSON.parse(contents);
+  // Get Value from JSON
+  let res_arr = await calculate_all_files();
+  let res_str =
+    "Organism Name, Gene Length, Length of First Coded Exon to Last Coded Exon\n";
+  for (let i = 0; i < res_arr.length; i++) {
+    res_arr[i][0] = files_map[res_arr[i][0]];
+    res_str = res_str + res_arr[i].join(",") + "\n";
+  }
+  fs.writeFile("mamals.csv", res_str, err => {
+    if (err) console.log(err);
+    console.log("Successfully Written to File.");
+  });
+}
+
+initializedFileMap();

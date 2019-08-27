@@ -32,7 +32,7 @@ new Promise(function(resolve, reject) {
   .then(responses => {
     let files_map = {};
     for (let i = 0; i < responses.length; i++) {
-      files_map[files[i]] = get_name(responses[i].data);
+      files_map["./mamals/" + files[i]] = get_name(responses[i].data);
     }
     files_map = JSON.stringify(files_map);
     fs.writeFile("files_map.json", files_map, err => {
