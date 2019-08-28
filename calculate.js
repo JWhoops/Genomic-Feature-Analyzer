@@ -2,20 +2,31 @@ const gff = require("bionode-gff");
 const fs = require("fs");
 const path = require("path");
 
+/**
+ * Pass in file pathm it will calculate the average legnth of
+ * first coded exon to last coded exon, and the average length
+ * of gene
+ * @param {*} file_name
+ * @returns {Promise} a promise that contains the result
+ */
 function calculate_file(file_name) {
   let gene,
-    wrong_gene_counts = 0,
     total_counted_gene_length = 0,
     counted_genes = 0,
     first_to_last_exon_length_pieces = 0,
     total_coded_exon_length = 0;
 
+  // asynchrous event
   return new Promise(resolve => {
+    // start reading file
     gff
       .read(file_name)
+      // call this function when reading each line of file
       .on("data", onFeature)
+      // call this funciton when finished
       .on("end", () => {
         done_reading_file();
+        // return the result
         resolve({
           file_name: file_name,
           average_gene_length: total_counted_gene_length / counted_genes,
@@ -100,37 +111,24 @@ function calculate_file(file_name) {
 
   function done_reading_file() {
     fetch_gene_info(gene); // this is for last gene in file;
-    console.log("Counted Genes = " + counted_genes);
-    console.log("Total Counted Gene Length = " + total_counted_gene_length);
-    console.log(
-      "Average Gene Length = " + total_counted_gene_length / counted_genes
-    );
-    console.log(
-      "Total Encoded First to Last Exon Length = " + total_coded_exon_length
-    );
-    console.log(
-      "Total Encoded First to Last Exon Length Pieces = " +
-        first_to_last_exon_length_pieces
-    );
-    console.log(
-      "Average Length of First Coded Exon to Last Coded Exon = " +
-        total_coded_exon_length / first_to_last_exon_length_pieces
-    );
-    console.log("Illegal Gene Number = " + wrong_gene_counts);
   }
 }
 
+/**
+ * this function will calculate all mamal gff files
+ */
 async function calculate_all_files() {
   let result_arr = [];
   const directoryPath = path.join(__dirname, "mamals");
   let files = fs.readdirSync(directoryPath);
   let result_files = [];
+  // filter illegal files
   const pattern = /^GCF_[0-9]*.*/;
   files.forEach(function(f) {
     if (pattern.test(f)) result_files.push("./mamals/" + f);
   });
 
-  for (let i = 0, len = result_files.length; i < len; i++) {
+  for (let i = 0, len = 10; i < len; i++) {
     const f = result_files[i];
     console.log("calculating " + f + "(" + i + "/" + len + ")");
     await calculate_file(f, "")
@@ -154,10 +152,12 @@ async function initializedFileMap() {
   let res_arr = await calculate_all_files();
   let res_str =
     "Organism Name, Gene Length, Length of First Coded Exon to Last Coded Exon\n";
+  // join results
   for (let i = 0; i < res_arr.length; i++) {
     res_arr[i][0] = files_map[res_arr[i][0]];
     res_str = res_str + res_arr[i].join(",") + "\n";
   }
+  // write to file
   fs.writeFile("mamals.csv", res_str, err => {
     if (err) console.log(err);
     console.log("Successfully Written to File.");

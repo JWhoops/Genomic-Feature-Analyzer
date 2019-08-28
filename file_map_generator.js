@@ -5,30 +5,24 @@ const fs = require("fs");
 
 let files = [];
 const directoryPath = path.join(__dirname, "mamals");
-
-// promisefication
-new Promise(function(resolve, reject) {
-  fs.readdir(directoryPath, function(err, files) {
-    if (err) return console.log("Unable to scan directory: " + err);
-    files.forEach(function(file) {
-      files.push(file);
-    });
-    resolve(files);
-  });
+/**
+ * logic below will generate a json file that contains mapping of
+ * assembly aceesion and organism name by crawling NBCI page
+ */
+let result_files = fs.readdirSync(directoryPath);
+new Promise(resolve => {
+  files = result_files;
+  const pattern = /^GCF_[0-9]*.*/;
+  let mamal_urls = [];
+  const base_url = "https://www.ncbi.nlm.nih.gov/assembly/";
+  files = result_files.filter(file_name => pattern.test(file_name));
+  for (f of files) {
+    const assembly_acces = "GCF_" + f.split("_")[1];
+    mamal_urls.push(assembly_acces);
+  }
+  let requests = mamal_urls.map(url => axios.get(base_url + url));
+  resolve(Promise.all(requests));
 })
-  .then(result_files => {
-    files = result_files;
-    const pattern = /^GCF_[0-9]*.*/;
-    let mamal_urls = [];
-    const base_url = "https://www.ncbi.nlm.nih.gov/assembly/";
-    files = result_files.filter(file_name => pattern.test(file_name));
-    for (f of files) {
-      const assembly_acces = "GCF_" + f.split("_")[1];
-      mamal_urls.push(assembly_acces);
-    }
-    let requests = mamal_urls.map(url => axios.get(base_url + url));
-    return Promise.all(requests);
-  })
   .then(responses => {
     let files_map = {};
     for (let i = 0; i < responses.length; i++) {
@@ -46,7 +40,15 @@ new Promise(function(resolve, reject) {
 
 function get_name(html) {
   const $ = cheerio.load(html);
-  return $("dl.assembly_summary_new dd a")
+  //parse div contains organism name
+  let name = $("dl.assembly_summary_new dd a")
     .first()
     .text();
+  // remove content in the parentheses
+  for (let i = 0; i < name.length; i++) {
+    if (name[i] === "(") {
+      name = name.substring(0, i - 1);
+    }
+  }
+  return name;
 }
