@@ -20,15 +20,18 @@ new Promise(resolve => {
     const assembly_acces = "GCF_" + f.split("_")[1];
     mamal_urls.push(assembly_acces);
   }
+  // send all request and get all mamal htmls
   let requests = mamal_urls.map(url => axios.get(base_url + url));
   resolve(Promise.all(requests));
 })
+// parse all html files
   .then(responses => {
     let files_map = {};
     for (let i = 0; i < responses.length; i++) {
       files_map["./mamals/" + files[i]] = get_name(responses[i].data);
     }
     files_map = JSON.stringify(files_map);
+    // write result to json file
     fs.writeFile("files_map.json", files_map, err => {
       if (err) console.log(err);
       console.log("Successfully Written to File.");
