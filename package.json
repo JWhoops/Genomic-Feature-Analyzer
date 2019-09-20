@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha"
   },
   "author": "Josiah Wu",
   "license": "ISC",
@@ -13,5 +13,8 @@
     "bionode-gff": "^2.0.0",
     "chart.js": "^2.8.0",
     "cheerio": "^1.0.0-rc.3"
+  },
+  "devDependencies": {
+    "mocha": "^6.2.0"
   }
 }

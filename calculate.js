@@ -1,6 +1,5 @@
 const gff = require("bionode-gff");
 const fs = require("fs");
-const path = require("path");
 
 /**
  * Pass in file pathm it will calculate the average legnth of
@@ -14,7 +13,8 @@ function calculate_file(file_name) {
     total_counted_gene_length = 0,
     counted_genes = 0,
     first_to_last_exon_length_pieces = 0,
-    total_coded_exon_length = 0;
+    total_coded_exon_length = 0,
+    wrong_gene_counts = 0;
 
   // asynchrous event
   return new Promise(resolve => {
@@ -92,17 +92,19 @@ function calculate_file(file_name) {
       end = 0;
     const firstCDS = g.cdss[0];
     const lastCDS = g.cdss[g.cdss.length - 1];
+    // find first coded exon
     for (let i = 0; i < g.exons.length; i++) {
       const firstExon = g.exons[i];
       if (firstCDS.start >= firstExon.start && firstCDS.end <= firstExon.end) {
-        end = firstExon.end;
+        start = firstExon.start;
         break;
       }
     }
+    // find last coded exon
     for (let i = 0; i < g.exons.length; i++) {
       const lastExon = g.exons[g.exons.length - 1 - i];
       if (lastCDS.start >= lastExon.start && lastCDS.end <= lastExon.end) {
-        start = lastExon.start;
+        end = lastExon.end;
         break;
       }
     }
@@ -117,20 +119,19 @@ function calculate_file(file_name) {
 /**
  * this function will calculate all mamal gff files
  */
-async function calculate_all_files() {
+async function calculate_all_files(directoryPath) {
   let result_arr = [];
-  const directoryPath = path.join(__dirname, "mamals");
   let files = fs.readdirSync(directoryPath);
   let result_files = [];
   // filter illegal files
   const pattern = /^GCF_[0-9]*.*/;
   files.forEach(function(f) {
-    if (pattern.test(f)) result_files.push("./mamals/" + f);
+    if (pattern.test(f)) result_files.push(directoryPath + "/" + f);
   });
 
-  for (let i = 0, len = 10; i < len; i++) {
+  for (let i = 0, len = result_files.length; i < len; i++) {
     const f = result_files[i];
-    console.log("calculating " + f + "(" + i + "/" + len + ")");
+    console.log("calculating " + f + "(" + (i + 1) + "/" + len + ")");
     await calculate_file(f, "")
       .then(res => {
         result_arr.push([
@@ -144,24 +145,30 @@ async function calculate_all_files() {
   return result_arr;
 }
 
-async function initializedFileMap() {
+async function initializedFileMap(directory_path, ouput_path) {
   var contents = fs.readFileSync("files_map.json");
   // Define to JSON type
   var files_map = JSON.parse(contents);
   // Get Value from JSON
-  let res_arr = await calculate_all_files();
+  let res_arr = await calculate_all_files(directory_path);
   let res_str =
-    "Organism Name, Gene Length, Length of First Coded Exon to Last Coded Exon\n";
+    "Organism Name, Average Gene Length," +
+    "Average Length of First Coded Exon to Last Coded Exon\n";
   // join results
   for (let i = 0; i < res_arr.length; i++) {
-    res_arr[i][0] = files_map[res_arr[i][0]];
+    /** convert file path to assembly 
+     eg: convert ./mamals/GCF_000001405.39_GRCh38.p13_genomic.gff
+     to GCF_000001405.39
+    */
+    res_arr[i][0] =
+      files_map["GCF_" + res_arr[i][0].split("/")[2].split("_")[1]];
     res_str = res_str + res_arr[i].join(",") + "\n";
   }
   // write to file
-  fs.writeFile("mamals.csv", res_str, err => {
+  fs.writeFile(ouput_path, res_str, err => {
     if (err) console.log(err);
     console.log("Successfully Written to File.");
   });
 }
 
-initializedFileMap();
+initializedFileMap(process.argv[2], process.argv[3]);
