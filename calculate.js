@@ -90,11 +90,12 @@ function calculate_file(file_name) {
     if (g.cdss.length === 0) return 0;
     let start = 0,
       end = 0;
-    const firstCDS = g.cdss[0];
-    const lastCDS = g.cdss[g.cdss.length - 1];
+    // both EXON and CDS are in reverse order!!!!!!!!
+    const firstCDS = g.cdss[g.cdss.length - 1];
+    const lastCDS = g.cdss[0];
     // find first coded exon
     for (let i = 0; i < g.exons.length; i++) {
-      const firstExon = g.exons[i];
+      const firstExon = g.exons[g.exons.length - 1 - i];
       if (firstCDS.start >= firstExon.start && firstCDS.end <= firstExon.end) {
         start = firstExon.start;
         break;
@@ -102,7 +103,7 @@ function calculate_file(file_name) {
     }
     // find last coded exon
     for (let i = 0; i < g.exons.length; i++) {
-      const lastExon = g.exons[g.exons.length - 1 - i];
+      const lastExon = g.exons[i];
       if (lastCDS.start >= lastExon.start && lastCDS.end <= lastExon.end) {
         end = lastExon.end;
         break;
@@ -171,4 +172,7 @@ async function initializedFileMap(directory_path, ouput_path) {
   });
 }
 
-initializedFileMap(process.argv[2], process.argv[3]);
+// initializedFileMap(process.argv[2], process.argv[3]);
+module.exports = {
+  calculate_file: calculate_file
+};

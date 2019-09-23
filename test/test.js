@@ -1,11 +1,16 @@
-var assert = require('assert');
+var assert = require("assert");
+const calc = require("../calculate");
 
-
-describe('Array', function() {
-  describe('#indexOf()', function() {
-    it('should return -1 when the value is not present', function() {
-      assert.equal([1, 2, 3].indexOf(4), -1);
-      assert.equal(true, true);
+describe("calculate gene", function() {
+  describe("#calculate_file", function() {
+    it("should return correct coded exon length: 458509", async function() {
+      let result = await calc.calculate_file("./mes/one_gene.gff");
+      assert.equal(result.average_exon_length, 458509);
+    });
+    it("should return correct coded exon length: 458509 with pseudo gene", async function() {
+      let result = await calc.calculate_file("./mes/one_gene_with_pseudo.gff");
+      
+      // assert.equal(result.average_exon_length, 458509);
     });
   });
 });
