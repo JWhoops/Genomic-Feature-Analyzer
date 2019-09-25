@@ -25,7 +25,7 @@ function calculate_file(file_name) {
       .on("data", onFeature)
       // call this funciton when finished
       .on("end", () => {
-        done_reading_file();
+        if (gene) fetch_gene_info(gene); // this is for last gene in file;
         // return the result
         resolve({
           file_name: file_name,
@@ -62,6 +62,11 @@ function calculate_file(file_name) {
       cds.start = feature.start;
       cds.end = feature.end;
       gene.cdss.push(cds);
+    } else if (feature.type === "pseudogene") {
+      /* if pseudogene, fetch the previous gene info
+         and return  */
+      if (gene) fetch_gene_info(gene);
+      gene = null; // do not add exon or cds after pseudogene
     }
   }
 
@@ -74,10 +79,10 @@ function calculate_file(file_name) {
     const coded_exon_length = get_coded_exon_length_for_gene(gene);
     const gene_length = gene.end - gene.start;
     if (coded_exon_length > 0 && coded_exon_length <= gene_length) {
-      counted_genes++;
+      counted_genes++; //??????????????????????????????????????????????????????????????
       total_counted_gene_length += gene_length;
       total_coded_exon_length += coded_exon_length;
-      first_to_last_exon_length_pieces++;
+      first_to_last_exon_length_pieces++; //???????????????????????????????????????????
     }
     if (gene_length < coded_exon_length) wrong_gene_counts++;
   }
@@ -91,6 +96,14 @@ function calculate_file(file_name) {
     let start = 0,
       end = 0;
     // both EXON and CDS are in reverse order!!!!!!!!
+    g.exons.sort((a, b) => {
+      return b.start - a.start;
+    });
+    g.cdss.sort((a, b) => {
+      return b.start - a.start;
+    });
+    console.log(g.exons);
+    console.log(g.cdss);
     const firstCDS = g.cdss[g.cdss.length - 1];
     const lastCDS = g.cdss[0];
     // find first coded exon
@@ -110,10 +123,6 @@ function calculate_file(file_name) {
       }
     }
     return Math.abs(end - start);
-  }
-
-  function done_reading_file() {
-    fetch_gene_info(gene); // this is for last gene in file;
   }
 }
 
