@@ -24,7 +24,7 @@ function get_assembly_organism_name_json(directoryPath, outputPath) {
     const base_url = "https://www.ncbi.nlm.nih.gov/assembly/";
     files = result_files.filter(file_name => pattern.test(file_name));
     for (f of files) {
-      const assembly_acces = "GCF_" + f.split("_")[1];
+      const assembly_acces = f.match(/GCF_(.+?)\.[0-9]+/g)[0];
       mamal_urls.push(assembly_acces);
     }
     // send all request and get all mamal htmls
@@ -35,7 +35,7 @@ function get_assembly_organism_name_json(directoryPath, outputPath) {
     .then(responses => {
       let files_map = {};
       for (let i = 0; i < responses.length; i++) {
-        files_map["GCF_" + files[i].split("_")[1]] = get_name(
+        files_map[files[i].match(/GCF_(.+?)\.[0-9]+/g)[0]] = get_name(
           responses[i].data
         );
       }

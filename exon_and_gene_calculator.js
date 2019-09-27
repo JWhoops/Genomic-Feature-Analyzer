@@ -36,7 +36,8 @@ function calculate_file(file_name) {
           file_name: file_name,
           average_gene_length: average_gene_length,
           average_exon_length: average_exon_length,
-          total_exon: counted_genes
+          total_exon: counted_genes,
+          illegal_genes: wrong_gene_counts
         });
       });
   });
@@ -87,7 +88,8 @@ function calculate_file(file_name) {
       total_counted_gene_length += gene_length;
       total_coded_exon_length += coded_exon_length;
     }
-    if (gene_length < coded_exon_length) wrong_gene_counts++;
+    if (gene_length < coded_exon_length && coded_exon_length !== 0)
+      wrong_gene_counts++;
   }
   // calculate the coded exon length
   // first_exon_start first_DSA first_exon_end
@@ -154,7 +156,8 @@ async function calculate_all_files(directoryPath) {
         result_arr.push([
           res.file_name,
           res.average_gene_length,
-          res.average_exon_length
+          res.average_exon_length,
+          res.illegal_genes
         ]);
       })
       .catch(err => console.log(err));
@@ -165,7 +168,7 @@ async function calculate_all_files(directoryPath) {
 async function get_averages_coded_exon_and_gene(directory_path, ouput_path) {
   var contents;
   try {
-    contents = fs.readFileSync("./files_map.json");
+    contents = fs.readFileSync("./assembly_2_name.json");
   } catch (error) {
     console.log(error);
   }
@@ -175,11 +178,11 @@ async function get_averages_coded_exon_and_gene(directory_path, ouput_path) {
   let res_arr = await calculate_all_files(directory_path);
   let res_str =
     "Organism Name,Average Gene Length," +
-    "Average Length of First Coded Exon to Last Coded Exon\n";
+    "Average Length of First Coded Exon to Last Coded Exon, Illegal Genes\n";
   // join results
   for (let i = 0; i < res_arr.length; i++) {
     /** convert file path to assembly 
-     eg: convert ./mamals/GCF_000001405.39_GRCh38.p13_genomic.gff
+     eg: convert ./path/GCF_000001405.39_GRCh38.p13_genomic.gff
      to GCF_000001405.39
     */
     let organism_assembly = res_arr[i][0].match(/GCF_(.+?)\.[0-9]+/g)[0];

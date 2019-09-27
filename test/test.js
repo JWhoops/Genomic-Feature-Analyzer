@@ -1,5 +1,5 @@
 var assert = require("assert");
-const calc = require("../calculate");
+const calc = require("../exon_and_gene_calculator");
 
 describe("calculate gene", function() {
   describe("#calculate_file", function() {
