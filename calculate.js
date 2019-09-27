@@ -12,7 +12,6 @@ function calculate_file(file_name) {
   let gene,
     total_counted_gene_length = 0,
     counted_genes = 0,
-    first_to_last_exon_length_pieces = 0,
     total_coded_exon_length = 0,
     wrong_gene_counts = 0;
 
@@ -27,12 +26,17 @@ function calculate_file(file_name) {
       .on("end", () => {
         if (gene) fetch_gene_info(gene); // this is for last gene in file;
         // return the result
+        let average_gene_length = 0;
+        let average_exon_length = 0;
+        if (counted_genes !== 0) {
+          average_gene_length = total_counted_gene_length / counted_genes;
+          average_exon_length = total_coded_exon_length / counted_genes;
+        }
         resolve({
           file_name: file_name,
-          average_gene_length: total_counted_gene_length / counted_genes,
-          average_exon_length:
-            total_coded_exon_length / first_to_last_exon_length_pieces,
-          total_exon: first_to_last_exon_length_pieces
+          average_gene_length: average_gene_length,
+          average_exon_length: average_exon_length,
+          total_exon: counted_genes
         });
       });
   });
@@ -79,10 +83,9 @@ function calculate_file(file_name) {
     const coded_exon_length = get_coded_exon_length_for_gene(gene);
     const gene_length = gene.end - gene.start;
     if (coded_exon_length > 0 && coded_exon_length <= gene_length) {
-      counted_genes++; //??????????????????????????????????????????????????????????????
+      counted_genes++;
       total_counted_gene_length += gene_length;
       total_coded_exon_length += coded_exon_length;
-      first_to_last_exon_length_pieces++; //???????????????????????????????????????????
     }
     if (gene_length < coded_exon_length) wrong_gene_counts++;
   }
@@ -102,8 +105,6 @@ function calculate_file(file_name) {
     g.cdss.sort((a, b) => {
       return b.start - a.start;
     });
-    console.log(g.exons);
-    console.log(g.cdss);
     const firstCDS = g.cdss[g.cdss.length - 1];
     const lastCDS = g.cdss[0];
     // find first coded exon
@@ -131,7 +132,13 @@ function calculate_file(file_name) {
  */
 async function calculate_all_files(directoryPath) {
   let result_arr = [];
-  let files = fs.readdirSync(directoryPath);
+  let files;
+  try {
+    files = fs.readdirSync(directoryPath);
+  } catch (error) {
+    console.log(error);
+    process.exit();
+  }
   let result_files = [];
   // filter illegal files
   const pattern = /^GCF_[0-9]*.*/;
@@ -155,14 +162,19 @@ async function calculate_all_files(directoryPath) {
   return result_arr;
 }
 
-async function initializedFileMap(directory_path, ouput_path) {
-  var contents = fs.readFileSync("files_map.json");
+async function get_averages_coded_exon_and_gene(directory_path, ouput_path) {
+  var contents;
+  try {
+    contents = fs.readFileSync("./files_map.json");
+  } catch (error) {
+    console.log(error);
+  }
   // Define to JSON type
   var files_map = JSON.parse(contents);
   // Get Value from JSON
   let res_arr = await calculate_all_files(directory_path);
   let res_str =
-    "Organism Name, Average Gene Length," +
+    "Organism Name,Average Gene Length," +
     "Average Length of First Coded Exon to Last Coded Exon\n";
   // join results
   for (let i = 0; i < res_arr.length; i++) {
@@ -170,8 +182,12 @@ async function initializedFileMap(directory_path, ouput_path) {
      eg: convert ./mamals/GCF_000001405.39_GRCh38.p13_genomic.gff
      to GCF_000001405.39
     */
-    res_arr[i][0] =
-      files_map["GCF_" + res_arr[i][0].split("/")[2].split("_")[1]];
+    let organism_assembly = res_arr[i][0].match(/GCF_(.+?)\.[0-9]+/g)[0];
+    let organism_name = files_map[organism_assembly];
+    // if organism assembly is not in json file
+    organism_name
+      ? (res_arr[i][0] = organism_name)
+      : (res_arr[i][0] = organism_assembly);
     res_str = res_str + res_arr[i].join(",") + "\n";
   }
   // write to file
@@ -183,5 +199,6 @@ async function initializedFileMap(directory_path, ouput_path) {
 
 // initializedFileMap(process.argv[2], process.argv[3]);
 module.exports = {
-  calculate_file: calculate_file
+  calculate_file: calculate_file,
+  get_averages_coded_exon_and_gene: get_averages_coded_exon_and_gene
 };
