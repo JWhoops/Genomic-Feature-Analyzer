@@ -1,0 +1,18 @@
+##gff-version 3								
+#!gff-spec-version 1.21								
+#!processor NCBI annotwriter								
+#!genome-build GRCm38.p6								
+#!genome-build-accession NCBI_Assembly:GCF_000001635.26								
+#!annotation-source NCBI Mus musculus Annotation Release 108								
+##sequence-region NC_000067.6 1 195471971								
+##species https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=10090								
+NC_000067.6	RefSeq	region	1	195471971	.	+	.	ID=NC_000067.6:1..195471971;Dbxref=taxon:10090;Name=1;chromosome=1;gbkey=Src;genome=chromosome;mol_type=genomic DNA;strain=C57BL/6J
+NC_000067.6	cmsearch	gene	3102016	3102125	.	+	.	ID=gene-LOC115487594;Dbxref=GeneID:115487594;Name=LOC115487594;gbkey=Gene;gene=LOC115487594;gene_biotype=snRNA
+NC_000067.6	cmsearch	snRNA	3102016	3102125	.	+	.	"ID=rna-XR_003949180.1;Parent=gene-LOC115487594;Dbxref=GeneID:115487594,RFAM:RF00026,Genbank:XR_003949180.1;Name=XR_003949180.1;gbkey=ncRNA;gene=LOC115487594;inference=COORDINATES: profile:INFERNAL:1.1.1;product=U6 spliceosomal RNA;transcript_id=XR_003949180.1"
+NC_000067.6	cmsearch	exon	3102016	3102125	.	+	.	"ID=exon-XR_003949180.1-1;Parent=rna-XR_003949180.1;Dbxref=GeneID:115487594,RFAM:RF00026,Genbank:XR_003949180.1;gbkey=ncRNA;gene=LOC115487594;inference=COORDINATES: profile:INFERNAL:1.1.1;product=U6 spliceosomal RNA;transcript_id=XR_003949180.1"
+NC_000067.6	BestRefSeq%2CGnomon	gene	3199733	3671948	.	-	.	"ID=gene-Xkr4;Dbxref=GeneID:497097,MGI:MGI:3528744;Name=Xkr4;description=X-linked Kx blood group related 4;gbkey=Gene;gene=Xkr4;gene_biotype=protein_coding;gene_synonym=AY534250,Gm210,mKIAA1889,XRG4"
+NC_000067.6	Gnomon	mRNA	3199733	3671948	.	-	.	"ID=rna-XM_006495550.4;Parent=gene-Xkr4;Dbxref=GeneID:497097,Genbank:XM_006495550.4,MGI:MGI:3528744;Name=XM_006495550.4;gbkey=mRNA;gene=Xkr4;model_evidence=Supporting evidence includes similarity to: 3 mRNAs%2C 5 ESTs%2C 4 Proteins%2C 394 long SRA reads%2C and 99%25 coverage of the annotated genomic feature by RNAseq alignments%2C including 7 samples with support for all annotated introns;product=X-linked Kx blood group related 4%2C transcript variant X1;transcript_id=XM_006495550.4"
+NC_000067.6	Gnomon	exon	3670552	3671948	.	-	.	"ID=exon-XM_006495550.4-1;Parent=rna-XM_006495550.4;Dbxref=GeneID:497097,Genbank:XM_006495550.4,MGI:MGI:3528744;gbkey=mRNA;gene=Xkr4;product=X-linked Kx blood group related 4%2C transcript variant X1;transcript_id=XM_006495550.4"
+NC_000067.6	Gnomon	exon	3421702	3421901	.	-	.	"ID=exon-XM_006495550.4-2;Parent=rna-XM_006495550.4;Dbxref=GeneID:497097,Genbank:XM_006495550.4,MGI:MGI:3528744;gbkey=mRNA;gene=Xkr4;product=X-linked Kx blood group related 4%2C transcript variant X1;transcript_id=XM_006495550.4"
+NC_000067.6	Gnomon	exon	3213439	3216968	.	-	.	"ID=exon-XM_006495550.4-3;Parent=rna-XM_006495550.4;Dbxref=GeneID:497097,Genbank:XM_006495550.4,MGI:MGI:3528744;gbkey=mRNA;gene=Xkr4;product=X-linked Kx blood group related 4%2C transcript variant X1;transcript_id=XM_006495550.4"
+NC_000067.6	Gnomon	exon	3199733	3207317	.	-	.	"ID=exon-XM_006495550.4-4;Parent=rna-XM_006495550.4;Dbxref=GeneID:497097,Genbank:XM_006495550.4,MGI:MGI:3528744;gbkey=mRNA;gene=Xkr4;product=X-linked Kx blood group related 4%2C transcript variant X1;transcript_id=XM_006495550.4"
